@@ -38,8 +38,10 @@ static void vPayloadPollData();
 static void vPayloadTask( void *pvParameters );
 static void vPayloadPrintData( char pcData[][payloadCHANNELS] );
 
-static int vPayloadReadFromSDCard();
+static int vPayloadGetImageOnSDCard();
+static int vPayloadDeleteImageOnSDCard(char*);
 static int vPayloadWriteToSDCard(char* file_name,char* data_string);
+static char* vPayloadGetImageFileName(char*);
 
 void vPayloadStartTask()
 {
@@ -137,21 +139,25 @@ static void vPayloadTask( void *pvParameters )
     for( ;; )
     {
         vTaskDelay(5000);
-        vPayloadReadFromSDCard();
+
+        if(1) //check GPIO PIN here for image stored
+        {
+         if(vPayloadGetImageOnSDCard())
+         {
+        	 //post PostPayloadEvent
+         }
+        }
 
 //        vWireScan( payloadBUS_PROTOTYPE );
-        vPayloadPrototypePollData();
+        //vPayloadPrototypePollData();
 //        vPayloadPollData();
     }
 }
-static int vPayloadReadFromSDCard()
+static int vPayloadGetImageOnSDCard()
 	{
 
-	/** Read a text file and display it */
-
 				FATFS FatFs;   /* Work area (file system object) for logical drive */
-			    FIL file,file2;       /* File object */
-			    //char line[82]; /* Line buffer */
+			    FIL file;       /* File object */
 			    FRESULT fr;    /* FatFs return code */
 			    BYTE buffer[512];    /* was 4096 File copy buffer */
 			    char file_name_buffer[20];
@@ -160,24 +166,30 @@ static int vPayloadReadFromSDCard()
 			 /* Register work area to the default drive **/
 			     f_mount(&FatFs,"", 0);
 			 /* Open the file */
+			 strcpy(file_name_buffer, vPayloadGetImageFileName(file_name_buffer));
 
-		    fr = f_open(&file, "log.txt", FA_READ);
-		    if (fr) return (int)fr;
+			 if(file_name_buffer  == NULL)
+				 return PAYLOAD_ERROR;
+
+		    fr = f_open(&file, file_name_buffer, FA_READ);
+
+		    if (fr)
+		    	return (int) PAYLOAD_ERROR;
 
 		    for (;;)
 		    		{
-		            	fr = f_read(&file, file_name_buffer, 16, &br);  /* Read a chunk of source file */
-		    			//(TCHAR*)f_gets((TCHAR*)buffer,50,&fil);
+		            	fr = f_read(&file, buffer, 256, &br);  /* Read a chunk of image file */
+
 		            	if (fr || br == 0)
-		            		break; /* error or eof */
-		            	fr = f_open(&file2,file_name_buffer, FA_READ);
-		            	fr = f_read(&file2, buffer, 256, &br);
-		            	f_close(&file2);
+		            	{
+		            		return PAYLOAD_ERROR; //break; /* error or eof */
+		            	}
+		            	f_close(&file);
 		           	 }
 		    /* Close the file */
 		    f_close(&file);
 
-		    return 0;
+		    return PAYLOAD_OK;
 
 
 }
@@ -210,9 +222,42 @@ static int vPayloadWriteToSDCard(char* file_name,char* data_string)
 			    				}
 			    			}
 			    	f_close(&file1);// Close the file
-			    	return 1;
+			    	return PAYLOAD_OK;
 			    }
 			    else
-			    	return 0;
+			    	return PAYLOAD_ERROR;
 }
 
+static char* vPayloadGetImageFileName(char* file_name_buffer)
+{
+//use the elapsed time in seconds since launch to get the latest file time stamp.
+//or retrieve file names from a file.
+
+	FATFS FatFs;   /* Work area (file system object) for logical drive */
+	FIL file;       /* File object */
+	FRESULT fr;    /* FatFs return code */
+	UINT br;
+ /* Register work area to the default drive **/
+     f_mount(&FatFs,"", 0);
+ /* Open the file */
+    fr = f_open(&file, "log.txt", FA_READ);
+
+    if (fr)
+    return NULL;
+
+	   for (;;)
+	   		{
+	           	fr = f_read(&file, file_name_buffer, 16, &br);  /* Read file name */
+	            	if (fr || br == 0) /* error or eof */
+	            	{
+	            		f_close(&file);
+	           		   return NULL; //break;
+	            	}
+
+	      	 }
+		    /* Close the file */
+		    f_close(&file);
+
+return file_name_buffer;
+
+}
