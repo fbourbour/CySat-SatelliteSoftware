@@ -24,6 +24,7 @@
 #include <string.h>
 #include "ff.h"
 #include "diskio.h"
+#include "payload.h"
 
 static int Test1();
 
@@ -40,7 +41,7 @@ static int Test1();
 
 
 static void initTask(void * params);
-static int ReadSDCard();
+
 
 static void lowLevelHardwareInit()
 {
@@ -68,14 +69,7 @@ int main( void )
 {
      lowLevelHardwareInit();
 
-    SysTick_Config(3000);
-        //Test1();
-       disk_initialize(0);
-       ReadSDCard(); //debug remove
-
-       return (1);
-
-    xTaskCreate(initTask, NULL, systemDEFAULT_STACK_SIZE, NULL, systemPRIORITY_INIT, NULL);
+       xTaskCreate(initTask, NULL, systemDEFAULT_STACK_SIZE, NULL, systemPRIORITY_INIT, NULL);
     vTaskStartScheduler();
     
     
@@ -102,7 +96,7 @@ void initTask(void * params)
     int i;
     
     I2C_Initialize();
-    //SPI_Initialize();
+    SPI_Initialize();
     
     vUartStartTask();
     vConsolePrintf("\r\n\r\n==================== BOOT ====================\r\n");
@@ -164,9 +158,7 @@ void initTask(void * params)
 //TODO: Port    startStorageDriverTask();
     
     vConsolePrintf("Init finished!\r\n");
-    vConsolePrintf("Testing SD Write!\r\n");
-    
-
+    vPayloadStartTask();
 
 #if 1
     uint8_t i2cbuffer[1000];
@@ -174,7 +166,7 @@ void initTask(void * params)
     uint8_t spirxbuffer[100];
 #endif
     
-    vConsolePrintf("Testing SPI transfer...");
+#ifdef SPI_LOW_LEVEL_DEBUG
     //test pattern to send to spi port via DMA
          spitxbuffer[0] =0x01;
          spitxbuffer[1] =0x02;
@@ -183,7 +175,8 @@ void initTask(void * params)
          spitxbuffer[4] =0x08;
          spitxbuffer[5] =0x01;
 
-      //SPI1_Transfer(spitxbuffer, spirxbuffer,6, portMAX_DELAY);
+#endif
+
      vConsolePrintf("Spi Transfer Done\r\n");
 
 
@@ -193,12 +186,17 @@ void initTask(void * params)
         vTaskDelay(500); //
         GPIO_ResetBits(GPIOA, GPIO_Pin_5);
         vTaskDelay(500);
-
-        vConsolePrintf("Testing SPI transfer...");
-        SPI1_Transfer(spitxbuffer, spirxbuffer,5, portMAX_DELAY);
-        vConsolePrintf("Spi Transfer Done\r\n");
-
         continue; //debug. remove later
+
+#ifdef SPI_LOW_LEVEL_DEBUG
+        // perform this test using an oscilloscope to monitor SPI signal lines as a
+        // tes pattern is sent to the SPI port via DMA
+        vConsolePrintf("SPI low level DMA transfer test...");
+        SPI1_TakeMutex(portMAX_DELAY);
+        SPI1_Transfer(spitxbuffer, spirxbuffer,6, portMAX_DELAY);
+        SPI1_ReleaseMutex();
+        vConsolePrintf("Spi low level DMA transfer test Done\r\n");
+#endif
 
 #if 1
         /* I2C test */
@@ -251,61 +249,6 @@ void initTask(void * params)
         vConsolePrintf("Done\r\n"); //
 #endif
     }
-}
-
-int ReadSDCard()
-{
-	UINT bw;
-
-	/** Read a text file and display it */
-
-	FATFS FatFs;   /* Work area (file system object) for logical drive */
-    FIL fil,fil1;       /* File object */
-    //char line[82]; /* Line buffer */
-    FRESULT fr;    /* FatFs return code */
-    //FIL fsrc;      // File objects
-    BYTE buffer[512];    /* was 4096 File copy buffer */
-    UINT br;
-
-
-	     /* Register work area to the default drive **/
-	    f_mount(&FatFs, "", 0);
-	    /* Open a text file */
-
-	    if (f_open(&fil1, "file.txt", FA_WRITE | FA_OPEN_ALWAYS) == FR_OK)
-	    {	// Open existing or create new file
-	    		if (f_lseek(&fil1, f_size(&fil1)) == FR_OK)
-	    			{
-	    				char *text2 = "This is a new line, appended to existing file!\r\n";
-	    				f_write(&fil1, text2, strlen(text2), &bw); // Write data to the file
-	    				if (bw == strlen(text2))
-	    				{ //we wrote the entire string
-	    					printf("Appended:%d\n", (int)f_size(&fil1));
-	    				}
-
-
-	    			}
-	    	f_close(&fil1);// Close the file
-	    }
-
-	    char buff[50];
-	    strcpy(buff,"file.txt");
-	    fr = f_open(&fil, "Bourbour.txt", FA_READ);
-	    //fr = f_open(&fil,buff, FA_READ);
-	    if (fr) return (int)fr;
-
-	    for (;;)
-	    		{
-	            	fr = f_read(&fil, buffer, sizeof buffer, &br);  /* Read a chunk of source file */
-	            	//fr = f_read(&fsrc, buffer,1, &br);  /* Read a chunk of source file */
-	            	if (fr || br == 0)
-	            		break; /* error or eof */
-	            	 printf(buffer);
-	           	 }
-	    /* Close the file */
-	    f_close(&fil);
-
-	    return 0;
 }
 
 void vApplicationStackOverflowHook()
