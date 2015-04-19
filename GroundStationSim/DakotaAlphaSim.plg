@@ -1,0 +1,72 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: DakotaAlphaSim - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating command line "rc.exe /l 0x409 /fo"Debug/DakotaAlphaSim.res" /d "_DEBUG" /d "_AFXDLL" "C:\CubeSat\GroundStationSim\DakotaAlphaSim.rc"" 
+Creating temporary file "C:\DOCUME~1\FERAID~1\LOCALS~1\Temp\RSP35.tmp" with contents
+[
+/nologo /MDd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /Fp"Debug/DakotaAlphaSim.pch" /Yu"stdafx.h" /Fo"Debug/" /Fd"Debug/" /FD /GZ /c 
+"C:\CubeSat\GroundStationSim\CntrItem.cpp"
+"C:\CubeSat\GroundStationSim\DakotaAlphaSim.cpp"
+"C:\CubeSat\GroundStationSim\DakotaAlphaSimDoc.cpp"
+"C:\CubeSat\GroundStationSim\DakotaAlphaSimView.cpp"
+"C:\CubeSat\GroundStationSim\HeliumSim.cpp"
+"C:\CubeSat\GroundStationSim\MainFrm.cpp"
+"C:\CubeSat\GroundStationSim\mscomm.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\FERAID~1\LOCALS~1\Temp\RSP35.tmp" 
+Creating temporary file "C:\DOCUME~1\FERAID~1\LOCALS~1\Temp\RSP36.tmp" with contents
+[
+/nologo /MDd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /Fp"Debug/DakotaAlphaSim.pch" /Yc"stdafx.h" /Fo"Debug/" /Fd"Debug/" /FD /GZ /c 
+"C:\CubeSat\GroundStationSim\StdAfx.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\FERAID~1\LOCALS~1\Temp\RSP36.tmp" 
+Creating temporary file "C:\DOCUME~1\FERAID~1\LOCALS~1\Temp\RSP37.tmp" with contents
+[
+/nologo /subsystem:windows /incremental:yes /pdb:"Debug/DakotaAlphaSim.pdb" /debug /machine:I386 /out:"Debug/DakotaAlphaSim.exe" /pdbtype:sept 
+.\Debug\CntrItem.obj
+.\Debug\DakotaAlphaSim.obj
+.\Debug\DakotaAlphaSimDoc.obj
+.\Debug\DakotaAlphaSimView.obj
+.\Debug\HeliumSim.obj
+.\Debug\MainFrm.obj
+.\Debug\mscomm.obj
+.\Debug\StdAfx.obj
+.\Debug\DakotaAlphaSim.res
+]
+Creating command line "link.exe @C:\DOCUME~1\FERAID~1\LOCALS~1\Temp\RSP37.tmp"
+<h3>Output Window</h3>
+Compiling resources...
+Compiling...
+StdAfx.cpp
+Compiling...
+CntrItem.cpp
+DakotaAlphaSim.cpp
+DakotaAlphaSimDoc.cpp
+DakotaAlphaSimView.cpp
+C:\CubeSat\GroundStationSim\DakotaAlphaSimView.cpp(489) : warning C4018: '<' : signed/unsigned mismatch
+C:\CubeSat\GroundStationSim\DakotaAlphaSimView.cpp(520) : warning C4018: '==' : signed/unsigned mismatch
+C:\CubeSat\GroundStationSim\DakotaAlphaSimView.cpp(523) : warning C4018: '<' : signed/unsigned mismatch
+C:\CubeSat\GroundStationSim\DakotaAlphaSimView.cpp(854) : warning C4305: 'argument' : truncation from 'const int' to 'char'
+C:\CubeSat\GroundStationSim\DakotaAlphaSimView.cpp(854) : warning C4309: 'argument' : truncation of constant value
+C:\CubeSat\GroundStationSim\DakotaAlphaSimView.cpp(860) : warning C4305: 'argument' : truncation from 'const int' to 'char'
+C:\CubeSat\GroundStationSim\DakotaAlphaSimView.cpp(860) : warning C4309: 'argument' : truncation of constant value
+HeliumSim.cpp
+C:\CubeSat\GroundStationSim\HeliumSim.cpp(35) : warning C4244: '=' : conversion from 'short' to 'char', possible loss of data
+C:\CubeSat\GroundStationSim\HeliumSim.cpp(39) : warning C4244: '=' : conversion from 'short' to 'char', possible loss of data
+MainFrm.cpp
+mscomm.cpp
+Generating Code...
+Linking...
+
+
+
+<h3>Results</h3>
+DakotaAlphaSim.exe - 0 error(s), 9 warning(s)
+</pre>
+</body>
+</html>
