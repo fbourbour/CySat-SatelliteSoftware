@@ -27,6 +27,7 @@
 #define payloadENABLE1_TRIS _TRISB4
 #define payloadENABLE2_TRIS _TRISB5
 #define payloadENABLE3_TRIS _TRISE9
+#define IMAGE_FILE_NAME_LENGTH 20
 
 #define payloadADDR ( 0xA0 )
 
@@ -42,6 +43,7 @@ static int vPayloadGetImageOnSDCard();
 static int vPayloadDeleteImageOnSDCard(char*);
 static int vPayloadWriteToSDCard(char* file_name,char* data_string);
 static char* vPayloadGetImageFileName(char*);
+static char ImageFileName[IMAGE_FILE_NAME_LENGTH];
 
 void vPayloadStartTask()
 {
@@ -160,18 +162,20 @@ static int vPayloadGetImageOnSDCard()
 			    FIL file;       /* File object */
 			    FRESULT fr;    /* FatFs return code */
 			    BYTE buffer[512];    /* was 4096 File copy buffer */
-			    char file_name_buffer[20];
 			    UINT br;
-
+			    char file_name_buffer[IMAGE_FILE_NAME_LENGTH];
 			 /* Register work area to the default drive **/
 			     f_mount(&FatFs,"", 0);
 			 /* Open the file */
-			 strcpy(file_name_buffer, vPayloadGetImageFileName(file_name_buffer));
+			 strcpy(ImageFileName, vPayloadGetImageFileName(file_name_buffer));
 
-			 if(file_name_buffer  == NULL)
+			 if(ImageFileName  == NULL)
 				 return PAYLOAD_ERROR;
 
-		    fr = f_open(&file, file_name_buffer, FA_READ);
+			/* Register work area to the default drive **/
+			f_mount(&FatFs,"", 0);
+
+		    fr = f_open(&file, ImageFileName, FA_READ);
 
 		    if (fr)
 		    	return (int) PAYLOAD_ERROR;
@@ -182,9 +186,11 @@ static int vPayloadGetImageOnSDCard()
 
 		            	if (fr || br == 0)
 		            	{
+		            		f_close(&file);
 		            		return PAYLOAD_ERROR; //break; /* error or eof */
 		            	}
-		            	f_close(&file);
+		            	break;
+
 		           	 }
 		    /* Close the file */
 		    f_close(&file);
@@ -193,6 +199,62 @@ static int vPayloadGetImageOnSDCard()
 
 
 }
+
+static char* vPayloadGetImageFileName(char* file_name_buffer)
+{
+//use the elapsed time in seconds since launch to get the latest file time stamp.
+//or retrieve file names from a file.
+
+	FATFS FatFs;   /* Work area (file system object) for logical drive */
+	FIL file;       /* File object */
+	FRESULT fr;    /* FatFs return code */
+	UINT br;
+ /* Register work area to the default drive **/
+     f_mount(&FatFs,"", 0);
+ /* Open the file */
+    fr = f_open(&file, "log.txt", FA_READ);
+
+    if (fr)
+    return NULL;
+
+    char ch;
+    unsigned char k;
+    ch = k = 0;
+
+    if (f_lseek(&file, 0) == FR_OK)
+    {
+	   for (;;)
+	   		{
+	           	fr = f_read(&file, &ch, 1, &br);  /* Read file name */
+	            	if (fr || br == 0) /* error or eof */
+	            	{
+	            		if(fr)
+	            		{
+	            			f_close(&file);
+	            			return NULL; //break;
+	            		}
+	            		else
+	            			break;
+	            	}
+
+	            	else if (ch == '\r' || k == IMAGE_FILE_NAME_LENGTH - 1)
+	            	{
+	            		break;
+	            	}
+	            	else
+	            	{
+	            		file_name_buffer[k++] = ch;
+	            	}
+	      	 }
+
+    }
+
+/* Close the file */
+f_close(&file);
+file_name_buffer[k] = '\0';
+return file_name_buffer;
+}
+
 
 static int vPayloadWriteToSDCard(char* file_name,char* data_string)
 {
@@ -203,8 +265,6 @@ static int vPayloadWriteToSDCard(char* file_name,char* data_string)
 
 			FATFS FatFs;   /* Work area (file system object) for logical drive */
 		    FIL file1;       /* File object */
-
-
 
 			     /* Register work area to the default drive **/
 			    f_mount(&FatFs,"", 0);
@@ -228,36 +288,3 @@ static int vPayloadWriteToSDCard(char* file_name,char* data_string)
 			    	return PAYLOAD_ERROR;
 }
 
-static char* vPayloadGetImageFileName(char* file_name_buffer)
-{
-//use the elapsed time in seconds since launch to get the latest file time stamp.
-//or retrieve file names from a file.
-
-	FATFS FatFs;   /* Work area (file system object) for logical drive */
-	FIL file;       /* File object */
-	FRESULT fr;    /* FatFs return code */
-	UINT br;
- /* Register work area to the default drive **/
-     f_mount(&FatFs,"", 0);
- /* Open the file */
-    fr = f_open(&file, "log.txt", FA_READ);
-
-    if (fr)
-    return NULL;
-
-	   for (;;)
-	   		{
-	           	fr = f_read(&file, file_name_buffer, 16, &br);  /* Read file name */
-	            	if (fr || br == 0) /* error or eof */
-	            	{
-	            		f_close(&file);
-	           		   return NULL; //break;
-	            	}
-
-	      	 }
-		    /* Close the file */
-		    f_close(&file);
-
-return file_name_buffer;
-
-}
