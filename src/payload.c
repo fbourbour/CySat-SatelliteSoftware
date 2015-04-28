@@ -184,12 +184,16 @@ static int vPayloadGetImageOnSDCard()
 		    		{
 		            	fr = f_read(&file, buffer, 256, &br);  /* Read a chunk of image file */
 
-		            	if (fr || br == 0)
-		            	{
-		            		f_close(&file);
-		            		return PAYLOAD_ERROR; //break; /* error or eof */
-		            	}
-		            	break;
+		            	if (fr || br == 0) /* error or eof */
+		            		{
+		            		   if(fr)
+		            		       {
+		            		       		f_close(&file);
+		            		       		return  PAYLOAD_ERROR; //break;
+		            		       }
+		            		    else
+		            		    	break; //eof
+		            		}
 
 		           	 }
 		    /* Close the file */
@@ -234,7 +238,7 @@ static char* vPayloadGetImageFileName(char* file_name_buffer)
 	            			return NULL; //break;
 	            		}
 	            		else
-	            			break;
+	            			break; //eof
 	            	}
 
 	            	else if (ch == '\r' || k == IMAGE_FILE_NAME_LENGTH - 1)
