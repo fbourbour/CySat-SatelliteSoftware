@@ -11,14 +11,15 @@
 #include <GenericTypeDefs.h>
 
 void vPayloadStartTask();
-#define PAYLOAD_ERROR 1
-#define PAYLOAD_OK 0
-#define IMAGE_SLOT_SIZE 65536
+
+
+#define IMAGE_SLOT_SIZE 16384 //16k
+
 
 typedef enum
 {
 	IMAGE_STORED_TO_SD,
-	IMAGE_LOADEDTO_SLOT, /* Attribute: Slot index */
+	IMAGE_LOADED_TO_SLOT, /* Attribute: Slot index */
 	IMAGE_FLUSHED_FROM_SLOT /* Attribute Slot index */
 
 }PayloadSig_t;
@@ -31,6 +32,13 @@ PURGE_SD_CARD,
 SET_CAPTURE_FREQUENCY, /* attribute: Frequency enum */
 SET_IMAGE_RESOLUTION   /* attribute : resolution enum */
 }CommunicationsSig_t;
+
+enum ImageSlotStatus
+{
+	IMAGE_SLOT_FLUSHED,
+	IMAGE_SLOT_FULL
+};
+
 
 typedef struct
 {
@@ -52,14 +60,20 @@ enum PAYLOAD_BOARD_STATES
 	ACTIVE // Capturing images and putting them onto the SD card.
 };
 
+enum PAYLOAD_STATUS
+{
+	PAYLOAD_OK,
+	PAYLOAD_ERROR,
+};
 typedef struct
 {
 uint16_t ImageSize;
+uint8_t SlotStatus;
 uint8_t Image[IMAGE_SLOT_SIZE];
 }ImageSlot_t;
 
 #define NUMBER_OF_SLOTS 2
-extern ImageSlot_t imageSlot[NUMBER_OF_SLOTS];
+ImageSlot_t imageSlot[NUMBER_OF_SLOTS];
 
 #endif	/* PAYLOAD_H */
 

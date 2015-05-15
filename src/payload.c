@@ -44,10 +44,13 @@ static int vPayloadDeleteImageOnSDCard(char*);
 static int vPayloadWriteToSDCard(char* file_name,char* data_string);
 static char* vPayloadGetImageFileName(char*);
 static char ImageFileName[IMAGE_FILE_NAME_LENGTH];
+static void vPayloadTransmitImage(ImageSlot_t* image_slot);
 
 void vPayloadStartTask()
 {
     xTaskCreate( vPayloadTask, NULL, configMINIMAL_STACK_SIZE, NULL, systemPRIORITY_PAYLOAD, NULL );
+    imageSlot[0].SlotStatus = IMAGE_SLOT_FLUSHED;
+    imageSlot[1].SlotStatus = IMAGE_SLOT_FLUSHED;
 }
 
 static void vPayloadPrintData( char pcData[][payloadCHANNELS] )
@@ -161,8 +164,8 @@ static int vPayloadGetImageOnSDCard()
 				FATFS FatFs;   /* Work area (file system object) for logical drive */
 			    FIL file;       /* File object */
 			    FRESULT fr;    /* FatFs return code */
-			    BYTE buffer[512];    /* was 4096 File copy buffer */
 			    UINT br;
+			    //char buffer[4096];
 			    char file_name_buffer[IMAGE_FILE_NAME_LENGTH];
 			 /* Register work area to the default drive **/
 			     f_mount(&FatFs,"", 0);
@@ -182,7 +185,25 @@ static int vPayloadGetImageOnSDCard()
 
 		    for (;;)
 		    		{
-		            	fr = f_read(&file, buffer, 256, &br);  /* Read a chunk of image file */
+
+
+		    			if(imageSlot[0].SlotStatus == IMAGE_SLOT_FLUSHED)
+		    			{
+		    				fr = f_read(&file,imageSlot[0].Image, IMAGE_SLOT_SIZE, &br);  /* Read a chunk of image file */
+		    				imageSlot[0].SlotStatus = IMAGE_SLOT_FULL;
+		    			}
+		    			else if(imageSlot[1].SlotStatus == IMAGE_SLOT_FLUSHED)
+		    			{
+		    				fr = f_read(&file,imageSlot[1].Image, IMAGE_SLOT_SIZE, &br);  /* Read a chunk of image file */
+		    				imageSlot[1].SlotStatus = IMAGE_SLOT_FULL;
+		    			}
+		    			else
+		    			{
+		    				f_close(&file);
+		    				return (int) IMAGE_SLOT_FULL;
+		    			}
+
+
 
 		            	if (fr || br == 0) /* error or eof */
 		            		{
@@ -290,5 +311,12 @@ static int vPayloadWriteToSDCard(char* file_name,char* data_string)
 			    }
 			    else
 			    	return PAYLOAD_ERROR;
+}
+
+
+static void vPayloadTransmitImage(ImageSlot_t* image_slot)
+{
+	image_slot->SlotStatus = IMAGE_SLOT_FLUSHED;
+	//add more code here
 }
 
